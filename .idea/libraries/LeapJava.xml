@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="LeapJava">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/LeapJava.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <NATIVE>
+      <root url="file://$PROJECT_DIR$/lib" />
+    </NATIVE>
+    <SOURCES />
+  </library>
+</component>
