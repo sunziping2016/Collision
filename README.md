@@ -1,8 +1,3 @@
-# About
-Collision is a game created by Sun. The goal of the game is to move a user-controlled ball to
-avoid collision of the other balls. The game features [Leap Motion](https://www.leapmotion.com/) technology, and
-it is created for the show of our [SSAST](http://ssast.org).
-
 # TODO
 * View
   * Add game welcome view
@@ -15,6 +10,10 @@ it is created for the show of our [SSAST](http://ssast.org).
   * Make all the ball feels like gravity
   * Add life.
 
+# About
+Collision is a game created by Sun. The goal of the game is to move a user-controlled ball to
+avoid collision of the other balls. The game features [Leap Motion](https://www.leapmotion.com/) technology, and
+it is created for the show of our [SSAST](http://ssast.org).
 
 ## Authors
 * [Sun Ziping](http://sunziping.com)

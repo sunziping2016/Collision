@@ -2,27 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="585705c2-dc35-48e3-abed-30a269c24b5a" name="Default" comment="Initial playable game. Able to respond to collision and be controller by users.">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/controller/GameController.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/controller/Notification.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/model/Ball.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/model/GameModel.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/view/Colors.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/view/GameView.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/view/GraphicsWrapper.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/view/LeapWarningView.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/view/View.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/LeapJava.xml" afterPath="$PROJECT_DIR$/.idea/libraries/LeapJava.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LICENSE.txt" afterPath="$PROJECT_DIR$/LICENSE.txt" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Main.java" afterPath="$PROJECT_DIR$/src/Main.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/view/ViewManager.java" afterPath="$PROJECT_DIR$/src/view/ViewManager.java" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/GetThere.iml" afterPath="$PROJECT_DIR$/Collision.iml" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/leap/LeapController.java" afterPath="$PROJECT_DIR$/src/controller/LeapController.java" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/view/graphics/ImageManager.java" afterPath="$PROJECT_DIR$/src/view/ImageManager.java" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/test/view/graphics/ImageManagerTest.java" afterPath="$PROJECT_DIR$/test/view/ImageManagerTest.java" />
     </list>
     <ignored path="GetThere.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -81,7 +61,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Notification.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Notification.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/controller/Notification.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="471">
@@ -111,12 +91,12 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/README.md">
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="SPLIT">
-              <first_editor relative-caret-position="272">
-                <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+              <first_editor relative-caret-position="170">
+                <caret line="10" column="13" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="13" />
                 <folding />
               </first_editor>
               <second_editor />
@@ -1032,22 +1012,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="9" selection-start-line="1" selection-start-column="9" selection-end-line="1" selection-end-column="9" />
-        </state>
-      </provider>
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="272">
-            <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
-            <folding />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/view/Colors.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="170">
@@ -1061,6 +1025,22 @@
         <state relative-caret-position="471">
           <caret line="34" column="0" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="1" column="9" selection-start-line="1" selection-start-column="9" selection-end-line="1" selection-end-column="9" />
+        </state>
+      </provider>
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="170">
+            <caret line="10" column="13" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="13" />
+            <folding />
+          </first_editor>
+          <second_editor />
         </state>
       </provider>
     </entry>
