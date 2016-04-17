@@ -1,8 +1,7 @@
-package view.graphics;
+package view;
 
 import org.junit.Test;
-
-import static org.junit.Assert.*;
+import view.ImageManager;
 
 /**
  * Created by Sun on 3/21/2016.

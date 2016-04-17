@@ -1,4 +1,4 @@
-package view.graphics;
+package view;
 
 /**
  * Created by Sun on 3/21/2016.
@@ -20,7 +20,7 @@ class ImageManager {
     private final static Logger logger = Logger.getLogger(ImageManager.class.getName());
 
     //set to 1.0 for non-Retina image instances
-    private static final float REAL_DENSITY = 2.0f;
+    static final float REAL_DENSITY = 2.0f;
 
     private static HashMap<String, BufferedImage> cache = new HashMap<>();
     private static HashMap<String, Image> instanceCache = new HashMap<>();
@@ -28,21 +28,21 @@ class ImageManager {
 
     static {
         try {
-            InputStream is = ImageManager.class.getResource("../../properties/DEFAULT_SCALES.properties").openStream();
+            InputStream is = ImageManager.class.getResource("../properties/DEFAULT_SCALES.properties").openStream();
             Properties p = new Properties();
             p.load(is);
             is.close();
             defaultScales = p;
         } catch (Exception e) {
             defaultScales = new Properties();
-            logger.warning("Failed to DEFAULT_SCALES.properties.");
+            //logger.warning("Failed to DEFAULT_SCALES.properties.");
         }
     }
 
     private static void load(String name) throws Exception {
-        BufferedImage b = ImageIO.read(ImageManager.class.getResource("../../images/" + name + ".png"));
+        BufferedImage b = ImageIO.read(ImageManager.class.getResource("../images/" + name + ".png"));
         cache.put(name, b);
-        logger.info(String.format("Loaded image resource %s.", name));
+        //logger.info(String.format("Loaded image resource %s.", name));
     }
 
     public static BufferedImage getImage(String name) {
@@ -50,7 +50,7 @@ class ImageManager {
             try {
                 load(name);
             } catch (Exception e) {
-                logger.warning(String.format("Failed to load image resource %s.", name));
+                //logger.warning(String.format("Failed to load image resource %s.", name));
                 return new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
             }
         }
