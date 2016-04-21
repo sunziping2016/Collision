@@ -2,10 +2,7 @@ package view;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -21,7 +18,6 @@ public class ViewManager extends JComponent implements KeyListener, WindowListen
     private LeapController leapController;
 
     private LeapWarningView leapWarning = new LeapWarningView();
-    private boolean leapWarningVisible = false;
 
     private ConcurrentLinkedDeque<View> views = new ConcurrentLinkedDeque<View>();
     private HashMap<String, View> registry = new HashMap<String, View>();
@@ -40,42 +36,54 @@ public class ViewManager extends JComponent implements KeyListener, WindowListen
         View view = getView(viewName);
         View activeView = views.peek();
         return view != null && activeView != null && view == activeView;
-
     }
-
-    public void pushView(View view) {
-        view.setViewManager(this);
-        view.onActive();
-        views.push(view);
+    public boolean isActiveView(View view) {
+        View activeView = views.peek();
+        return view != null && activeView != null && view == activeView;
     }
-    public void pushView(String viewName) {
+    public synchronized void pushView(String viewName, Content content) {
         View view = getView(viewName);
         if (view == null) return;
-        pushView(view);
-    }
-    public View popView() {
-        View popped = views.pop();
+        view.onCreate(content);
         View activeView = views.peek();
         if (activeView != null)
-            activeView.onActive();
+            activeView.onStop();
+        view.onStart();
+        views.push(view);
+        repaint();
+    }
+    public void pushView(String viewName) {
+        pushView(viewName, new Content());
+    }
+    public synchronized View popView() {
+        View popped = views.pop();
+        if (popped != null)
+            popped.onStop();
+        View activeView = views.peek();
+        if (activeView != null)
+            activeView.onStart();
+        if (popped != null)
+            popped.onDestroy();
+        repaint();
         return popped;
     }
 
+    @Override
     public void paintComponent(Graphics g) {
         GraphicsWrapper g2 = new GraphicsWrapper(g, this);
         Iterator<View> it = views.descendingIterator();
         while (it.hasNext()) {
             View v = it.next();
             boolean active = !it.hasNext();
-            v.draw(g2, active);
+            v.onPaint(g2);
         }
-        if (leapWarningVisible)
-            leapWarning.draw(g2, true);
+        if (!leapController.isConnected())
+            leapWarning.onPaint(g2);
     }
     public void keyReleased(KeyEvent e) {
-        //escape key exits app from anywhere
-        //if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
-        //    System.exit(0);
+        // escape key exits app from anywhere
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+            System.exit(0);
         View activeView = views.peek();
         if (activeView != null)
             activeView.onKey(e.getKeyCode());
@@ -99,19 +107,9 @@ public class ViewManager extends JComponent implements KeyListener, WindowListen
     public Dimension getMaximumSize() { return getPreferredSize(); }
     public Dimension getMinimumSize() { return getPreferredSize(); }
 
-    public void windowActivated(WindowEvent event) {
-        if (leapController != null)
-            leapController.notifyWindowState(true);
-    }
+    public void windowActivated(WindowEvent event) {}
 
-    public void windowDeactivated(WindowEvent event) {
-
-        if (event.getOppositeWindow() != null || event.getWindow() == null)
-            return;
-        if (leapController != null)
-            leapController.notifyWindowState(false);
-
-    }
+    public void windowDeactivated(WindowEvent event) {}
 
     public void windowClosed(WindowEvent event) {}
     public void windowClosing(WindowEvent event) {}
@@ -119,8 +117,12 @@ public class ViewManager extends JComponent implements KeyListener, WindowListen
     public void windowIconified(WindowEvent event) {}
     public void windowOpened(WindowEvent event) {}
 
-    public void setLeapWarningVisible(boolean leapWarningVisible) {
-        this.leapWarningVisible = leapWarningVisible;
+    public LeapController getLeapController() {
+        return leapController;
+    }
+
+    public void setLeapController(LeapController leapController) {
+        this.leapController = leapController;
     }
 }
 

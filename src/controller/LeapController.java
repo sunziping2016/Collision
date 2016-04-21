@@ -1,11 +1,11 @@
 package controller;
 
 import com.leapmotion.leap.*;
+import view.LeaderboardView;
 import view.ViewManager;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.logging.Handler;
+import java.util.Collections;
 import java.util.logging.Logger;
 
 /**
@@ -14,14 +14,19 @@ import java.util.logging.Logger;
  * Thread to listen and parse Leap Frame
  */
 public class LeapController extends Listener implements Runnable {
-    private boolean windowFocused;
     private ViewManager viewManager;
     private GameController gameController;
 
+    private final ArrayList<PointerListener> pointerListeners = new ArrayList<>();
+
     private int[] preferredHandIDs = null;
 
-    static final double SPACE_WIDTH = 200f;
-    static final double SPACE_HEIGHT = 200f;
+    private static final double SPACE_WIDTH = 200f;
+    private static final double SPACE_HEIGHT = 200f;
+
+    public static final double THUMB_YAW_THRESHOLD = 65f / 180f * Math.PI;
+    public static final double THUMB_LENGTH_THRESHOLD = 30;
+
 
     private long lastUpdate;
 
@@ -32,13 +37,16 @@ public class LeapController extends Listener implements Runnable {
         return (n - a) / (b - a);
     }
 
+    public boolean isConnected() {
+        return leap.isConnected();
+    }
+
     public void processFrame(Frame frame) {
         long now = System.currentTimeMillis();
         long dt = (lastUpdate < 0) ? 0 : now-lastUpdate;
 
-        viewManager.setLeapWarningVisible(!leap.isConnected());
-        //if (!windowFocused || !leap.isConnected())
-        //    return;
+        if (!leap.isConnected())
+            return;
         if (viewManager.isActiveView("game")) {
             // Allocate hands to the users.
             int[] newPreferredHandIds = new int[gameController.getnUsers()];
@@ -76,7 +84,7 @@ public class LeapController extends Listener implements Runnable {
             // Update game.
             for (int i = 0; i < hands.length; ++i) {
                 gameController.setUserOnline(i, hands[i] != null);
-                if (hands[i] == null || gameController.getModel().userBalls.get(i).isDead) {
+                if (hands[i] == null || gameController.getGameModel().userBalls.get(i).isDead) {
                     continue;
                 }
                 Vector handPos = hands[i].palmPosition();
@@ -87,11 +95,51 @@ public class LeapController extends Listener implements Runnable {
             }
         }
 
+        synchronized (pointerListeners) {
+            if (!pointerListeners.isEmpty()) {
+                boolean hasDefault = false;
+                Hand defaultHand = null;
+                // Find the best pointer.
+                for (PointerListener listener : pointerListeners) {
+                    Hand pointer = frame.hand(listener.preferredPointableID);
+                    if (!pointer.isValid()) {
+                        if (!hasDefault) {
+                            for (Hand p : frame.hands()) {
+                                if (defaultHand != null && Math.abs(defaultHand.palmPosition().getX()) < Math.abs(p.palmPosition().getX()))
+                                    continue;
+                                if (defaultHand != null && defaultHand.timeVisible() > p.timeVisible()) continue;
+                                defaultHand = p;
+                            }
+                            hasDefault = true;
+                        }
+                        pointer = defaultHand;
+                    }
+                    // Update pointer.
+                    if (pointer != null) {
+                        Vector pos = pointer.palmPosition();
+                        double x = normalize(pos.getX(), -SPACE_WIDTH / 2.0f, SPACE_WIDTH / 2.0f) * 16;
+                        double y = 10.0 - 10.0 * normalize(pos.getY() - 150f, 50f, SPACE_HEIGHT * 0.75f);
+                        new Thread(() -> listener.onPointerUpdate((float) x, (float) y, true)).start();
+                        listener.preferredPointableID = pointer.id();
+                    } else {
+                        new Thread(() -> listener.onPointerUpdate(0.0f, 0.0f, false)).start();
+                        listener.preferredPointableID = -1;
+                    }
+                }
+            }
+        }
+
         lastUpdate = now;
     }
-
-    public void notifyWindowState(boolean focused) {
-        this.windowFocused = focused;
+    public void addListener(PointerListener listener) {
+        synchronized (pointerListeners) {
+            pointerListeners.add(listener);
+        }
+    }
+    public void removeListener(PointerListener listener) {
+        synchronized (pointerListeners) {
+            pointerListeners.remove(listener);
+        }
     }
 
     private Controller leap;
@@ -100,7 +148,12 @@ public class LeapController extends Listener implements Runnable {
     public void run() {
         while (true) {
             processFrame(leap.frame());
-            try { Thread.sleep(50); } catch (Exception e) {}
+            try {
+                Thread.sleep(50);
+            }
+            catch (InterruptedException error) {
+                break;
+            }
         }
     }
 

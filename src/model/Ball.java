@@ -15,6 +15,7 @@ import java.awt.*;
 public class Ball {
     // only valid for user controlled balls.
     public boolean isOnline, isDead;
+    public enum BallState {ALIVE, DEAD, REMOVED};
     public int coolDown;
 
     private Body body;
@@ -23,12 +24,10 @@ public class Ball {
     private int user;
     private int numContact;
 
-    public Ball(World world, Vec2 pos, Vec2 vel, Color color, int user) {
+    public Ball(World world, Vec2 pos, Color color, int user) {
         BodyDef bodyDef = new BodyDef();
-        if (user == 0) {
+        if (user == 0)
             bodyDef.type = BodyType.DYNAMIC;
-            bodyDef.linearVelocity.set(vel);
-        }
         else {
             bodyDef.type = BodyType.DYNAMIC;
             bodyDef.linearDamping = 10f;
@@ -60,6 +59,9 @@ public class Ball {
 
         this.color = color;
         this.user = user;
+    }
+    public void remove(World world) {
+        world.destroyBody(body);
     }
 
     public Body getBody() {

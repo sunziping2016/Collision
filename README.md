@@ -1,9 +1,5 @@
 # TODO
-* View
-  * Add game welcome view
-  * Add game over view
-  * Menu
-* Ball color mixture
+* Rewrite Ball
 * Info text
 * Some special ability for balls
   * No death for a certain period
@@ -12,7 +8,7 @@
 
 # About
 Collision is a game created by Sun. The goal of the game is to move a user-controlled ball to
-avoid collision of the other balls. The game features [Leap Motion](https://www.leapmotion.com/) technology, and
+avoid being collided with the other balls. The game features [Leap Motion](https://www.leapmotion.com/) technology, and
 it is created for the show of our [SSAST](http://ssast.org).
 
 ## Authors
@@ -29,5 +25,8 @@ It's developed with Intellij and JDK 1.8 under Windows. Other platforms haven't 
   * `lib/Leap.dll`
   * `lib/LeapJava.dll`
   * `lib/LeapJava.jar`
-* jBox2d (available [here](https://github.com/jbox2d/jbox2d))
-  * `lib\jbox2d-library-2.2.1.1.jar`
+* jBox2d (available [here](https://github.com/jbox2d/jbox2d)).
+  * `lib/jbox2d-library.jar`
+
+Notice: Because jBox2d's `velocityThreshold` is set too low to satisfy my game. I've changed the value from `1.0f` to `0.01f` and
+recompiled it.

@@ -1,24 +1,30 @@
 package view;
 
-import java.awt.*;
-
 /**
  * Created by Sun on 4/6/2016.
  *
  * View Class.
  */
-abstract public class View {
+public class View {
     private ViewManager viewManager = null;
 
-    abstract public void draw(GraphicsWrapper g2, boolean active);
-    public void onActive() {}
+    public void onCreate(Content content) {}
+    public void onStart() {}
+    public void onPaint(GraphicsWrapper g2) {}
+    public void onStop() {}
+    public void onDestroy() {}
+
     public void onKey(int keyCode) {}
+
+    public boolean isActive() {
+        return getViewManager().isActiveView(this);
+    }
 
     public ViewManager getViewManager() {
         return viewManager;
     }
-
     public void setViewManager(ViewManager viewManager) {
         this.viewManager = viewManager;
     }
 }
+

@@ -86,7 +86,7 @@ class ImageManager {
     }
 
     private static Image getImageInstance(BufferedImage raw, float xScale, float yScale, float rotation) {
-        //draw the rotated image at full (raw file pixels) size
+        //onPaint the rotated image at full (raw file pixels) size
         BufferedImage step1 = new BufferedImage(raw.getWidth() * 2, raw.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
         Graphics2D s1g = (Graphics2D)step1.getGraphics();
         AffineTransform s1tf = new AffineTransform();
@@ -105,7 +105,6 @@ class ImageManager {
         try {
             return Float.parseFloat(val);
         } catch (Exception e) {
-            logger.warning(String.format("Failed to load default scale for %s.", name));
             return 1.0f;
         }
 
