@@ -8,11 +8,9 @@ package view;
 public class View {
     private ViewManager viewManager = null;
 
-    public void onCreate(Content content) {}
-    public void onStart() {}
+    public void onStart(Content content) {}
     public void onPaint(GraphicsWrapper g2) {}
     public void onStop() {}
-    public void onDestroy() {}
 
     public void onKey(int keyCode) {}
 

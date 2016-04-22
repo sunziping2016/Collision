@@ -14,8 +14,7 @@ import java.awt.*;
  */
 public class Ball {
     // only valid for user controlled balls.
-    public boolean isOnline, isDead;
-    public enum BallState {ALIVE, DEAD, REMOVED};
+    public boolean isOnline, isDead, isCleared;
     public int coolDown;
 
     private Body body;
@@ -31,7 +30,7 @@ public class Ball {
         else {
             bodyDef.type = BodyType.DYNAMIC;
             bodyDef.linearDamping = 10f;
-            coolDown = 150;
+            coolDown = 30;
         }
         bodyDef.position.set(pos);
         bodyDef.gravityScale = 0.0f;

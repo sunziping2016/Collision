@@ -2,7 +2,6 @@
   <library name="LeapJava">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/lib/LeapJava.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/jbox2d-library.jar!/" />
     </CLASSES>
     <JAVADOC />
     <NATIVE>

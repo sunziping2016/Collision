@@ -4,7 +4,9 @@ import com.leapmotion.leap.*;
 import view.LeaderboardView;
 import view.ViewManager;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.logging.Logger;
 
@@ -14,23 +16,27 @@ import java.util.logging.Logger;
  * Thread to listen and parse Leap Frame
  */
 public class LeapController extends Listener implements Runnable {
-    private ViewManager viewManager;
-    private GameController gameController;
-
+    static public class Area {
+        public float leftupx, leftupy, rightbuttomx, rightbuttomy;
+        public Area(float leftupx, float leftupy, float rightbuttomx, float rightbuttomy) {
+            this.leftupx = leftupx;
+            this.leftupy = leftupy;
+            this.rightbuttomx = rightbuttomx;
+            this.rightbuttomy = rightbuttomy;
+        }
+        public float[] getAreaCenter() {
+            return new float[] {
+                    (leftupx + rightbuttomx) / 2.0f,
+                    (leftupy + rightbuttomy) / 2.0f,
+            };
+        }
+    }
     private final ArrayList<PointerListener> pointerListeners = new ArrayList<>();
+    private final ArrayList<HandsListener> handsListeners = new ArrayList<>();
 
-    private int[] preferredHandIDs = null;
+    private Thread thread;
 
-    private static final double SPACE_WIDTH = 200f;
-    private static final double SPACE_HEIGHT = 200f;
-
-    public static final double THUMB_YAW_THRESHOLD = 65f / 180f * Math.PI;
-    public static final double THUMB_LENGTH_THRESHOLD = 30;
-
-
-    private long lastUpdate;
-
-    private double normalize(double n, double a, double b) {
+    private float normalize(float n, float a, float b) {
         assert a != b;
         if (n >= b) return 1f;
         if (n <= a) return 0f;
@@ -41,104 +47,142 @@ public class LeapController extends Listener implements Runnable {
         return leap.isConnected();
     }
 
+    private long lastUpdate;
     public void processFrame(Frame frame) {
         long now = System.currentTimeMillis();
-        long dt = (lastUpdate < 0) ? 0 : now-lastUpdate;
+        long dt = (lastUpdate < 0) ? 0 : now - lastUpdate;
 
         if (!leap.isConnected())
             return;
-        if (viewManager.isActiveView("game")) {
-            // Allocate hands to the users.
-            int[] newPreferredHandIds = new int[gameController.getnUsers()];
-            Hand[] hands = new Hand[gameController.getnUsers()];
-            ArrayList<Hand> unallocatedHands = new ArrayList<Hand>();
-            for (Hand i: frame.hands())
-                unallocatedHands.add(i);
-            for (int i = 0; i < newPreferredHandIds.length; ++i) {
-                if (preferredHandIDs != null && i < preferredHandIDs.length && preferredHandIDs[i] != -1) {
-                    int  j;
-
-                    for (j = 0; j < unallocatedHands.size(); ++j)
-                        if (preferredHandIDs[i] == unallocatedHands.get(j).id()) {
-                            newPreferredHandIds[i] = preferredHandIDs[i];
-                            hands[i] = unallocatedHands.get(j);
-                            break;
-                        }
-                    if (j != unallocatedHands.size()) {
-                        unallocatedHands.remove(j);
-                        continue;
+        synchronized (handsListeners) {
+            for (HandsListener listener: handsListeners) {
+                // Get infomation from listener.
+                int nHands = listener.getnHands(), nAllocated = 0;
+                Area[] areas = new Area[nHands];
+                float[][] areaCenters = new float[nHands][];
+                for (int i = 0; i < nHands; ++i) {
+                    areas[i] = listener.getArea(i);
+                    areaCenters[i] = areas[i].getAreaCenter();
+                }
+                // Check for traced hands.
+                int[] preferredHandIds = new int[nHands];
+                Hand[] hands = new Hand[nHands];
+                ArrayList<Hand> unallocatedHands = new ArrayList<>();
+                Arrays.fill(preferredHandIds, -1);
+                for (Hand hand: frame.hands())
+                    if (hand.isValid())
+                        unallocatedHands.add(hand);
+                if (nHands == listener.preferredHandsID.length) {
+                    for (int i = 0; i < nHands; ++i) {
+                        if (listener.preferredHandsID[i] == -1) continue;
+                        int j;
+                        for (j = 0; j < unallocatedHands.size(); ++j)
+                            if (listener.preferredHandsID[i] == unallocatedHands.get(j).id()) {
+                                ++nAllocated;
+                                preferredHandIds[i] = listener.preferredHandsID[i];
+                                hands[i] = unallocatedHands.get(j);
+                                break;
+                            }
+                        if (j != unallocatedHands.size())
+                            unallocatedHands.remove(j); // Avoid corruption.
                     }
                 }
-                newPreferredHandIds[i] = -1;
-                hands[i] = null;
-            }
-            preferredHandIDs = newPreferredHandIds;
-            unallocatedHands.sort((a, b) -> {return (int)(a.palmPosition().getX() - b.palmPosition().getX());});
-            for (int i = 0; i < preferredHandIDs.length; ++i) {
-                if (preferredHandIDs[i] == -1 && !unallocatedHands.isEmpty()) {
-                    preferredHandIDs[i] = unallocatedHands.get(0).id();
-                    hands[i] = unallocatedHands.get(0);
-                    unallocatedHands.remove(0);
+                // Find the closest.
+                while (nAllocated != nHands || !unallocatedHands.isEmpty()) {
+                    boolean founded = false;
+                    int index = 0;
+                    Hand hand = null;
+                    float dis = 0.0f;
+                    for (int i = 0; i < nHands; ++i) {
+                        if (preferredHandIds[i] != -1) continue;
+                        for (Hand h: unallocatedHands) {
+                            Vector handPos = h.palmPosition();
+                            float dx = handPos.getX() - areaCenters[i][0], dy = handPos.getY() - areaCenters[i][1];
+                            float dis2 = dx * dx + dy * dy;
+                            if (!founded || dis2 < dis)  {
+                                founded = true;
+                                index = i;
+                                hand = h;
+                                dis = dis2;
+                            }
+                        }
+                    }
+                    if (founded) {
+                        ++nAllocated;
+                        preferredHandIds[index] = hand.id();
+                        hands[index] = hand;
+                        unallocatedHands.remove(hand);
+                    }
+                    else
+                        break;
                 }
-            }
-            // Update game.
-            for (int i = 0; i < hands.length; ++i) {
-                gameController.setUserOnline(i, hands[i] != null);
-                if (hands[i] == null || gameController.getGameModel().userBalls.get(i).isDead) {
-                    continue;
+                // Update the listeners.
+                listener.preferredHandsID = preferredHandIds;
+                for (int i = 0; i < nHands; ++i) {
+                    if (preferredHandIds[i] != -1) {
+                        Vector pos = hands[i].palmPosition();
+                        float x = normalize(pos.getX(), areas[i].leftupx, areas[i].rightbuttomx);
+                        float y = normalize(pos.getY(), areas[i].rightbuttomy, areas[i].leftupy);
+                        listener.onHandUpdate(i, x, y, dt, true);
+                    }
+                    else
+                        listener.onHandUpdate(i, 0, 0, dt, false);
                 }
-                Vector handPos = hands[i].palmPosition();
-                double dx = (i - hands.length / 2.0 + 0.5) * 2 * SPACE_HEIGHT;
-                double x = normalize(handPos.getX(), -SPACE_WIDTH/2.0f + dx, SPACE_WIDTH/2.0f + dx);
-                double y = normalize(handPos.getY() - 150f, 0f, SPACE_HEIGHT);
-                gameController.moveUserBall(i, x, y, dt);
             }
         }
 
         synchronized (pointerListeners) {
-            if (!pointerListeners.isEmpty()) {
-                boolean hasDefault = false;
-                Hand defaultHand = null;
+            boolean hasDefault = false;
+            Hand defaultHand = null;
                 // Find the best pointer.
-                for (PointerListener listener : pointerListeners) {
-                    Hand pointer = frame.hand(listener.preferredPointableID);
-                    if (!pointer.isValid()) {
-                        if (!hasDefault) {
-                            for (Hand p : frame.hands()) {
-                                if (defaultHand != null && Math.abs(defaultHand.palmPosition().getX()) < Math.abs(p.palmPosition().getX()))
-                                    continue;
-                                if (defaultHand != null && defaultHand.timeVisible() > p.timeVisible()) continue;
-                                defaultHand = p;
-                            }
-                            hasDefault = true;
+            for (PointerListener listener : pointerListeners) {
+                Hand pointer = frame.hand(listener.preferredPointableID);
+                if (!pointer.isValid()) {
+                    if (!hasDefault) {
+                        for (Hand p : frame.hands()) {
+                            if (defaultHand != null && Math.abs(defaultHand.palmPosition().getX()) < Math.abs(p.palmPosition().getX()))
+                                continue;
+                            if (defaultHand != null && defaultHand.timeVisible() > p.timeVisible()) continue;
+                            defaultHand = p;
                         }
-                        pointer = defaultHand;
+                        hasDefault = true;
                     }
-                    // Update pointer.
-                    if (pointer != null) {
-                        Vector pos = pointer.palmPosition();
-                        double x = normalize(pos.getX(), -SPACE_WIDTH / 2.0f, SPACE_WIDTH / 2.0f) * 16;
-                        double y = 10.0 - 10.0 * normalize(pos.getY() - 150f, 50f, SPACE_HEIGHT * 0.75f);
-                        new Thread(() -> listener.onPointerUpdate((float) x, (float) y, true)).start();
-                        listener.preferredPointableID = pointer.id();
-                    } else {
-                        new Thread(() -> listener.onPointerUpdate(0.0f, 0.0f, false)).start();
-                        listener.preferredPointableID = -1;
-                    }
+                    pointer = defaultHand;
+                }
+                // Update the listeners.
+                if (pointer != null) {
+                    Vector pos = pointer.palmPosition();
+                    Area area = listener.getArea();
+                    float x = normalize(pos.getX(), area.leftupx, area.rightbuttomx);
+                    float y = normalize(pos.getY(), area.rightbuttomy, area.leftupy);
+                    listener.preferredPointableID = pointer.id();
+                    new Thread(() -> listener.onPointerUpdate(x, y, dt, true)).start();
+                } else {
+                    listener.preferredPointableID = -1;
+                    new Thread(() -> listener.onPointerUpdate(0.0f, 0.0f, dt, false)).start();
                 }
             }
         }
-
         lastUpdate = now;
     }
-    public void addListener(PointerListener listener) {
+    public void addPointerListener(PointerListener listener) {
         synchronized (pointerListeners) {
             pointerListeners.add(listener);
         }
     }
-    public void removeListener(PointerListener listener) {
+    public void removePointerListener(PointerListener listener) {
         synchronized (pointerListeners) {
             pointerListeners.remove(listener);
+        }
+    }
+    public void addHandsListener(HandsListener listener) {
+        synchronized (handsListeners) {
+            handsListeners.add(listener);
+        }
+    }
+    public void removeHandsListener(HandsListener listener) {
+        synchronized (handsListeners) {
+            handsListeners.remove(listener);
         }
     }
 
@@ -156,15 +200,31 @@ public class LeapController extends Listener implements Runnable {
             }
         }
     }
-
-    public LeapController(GameController gameController, ViewManager viewManager) {
-        this.gameController = gameController;
-        this.viewManager = viewManager;
-
+    private LeapController() {
         leap = new Controller(this);
+        thread = new Thread(this);
+    }
 
-        Thread t = new Thread(this);
-        t.start();
+    public void start() {
+        if (!thread.isAlive()) {
+            thread = new Thread(this);
+            thread.start();
+        }
+    }
 
+    public void stop() {
+        if (thread.isAlive()) {
+            thread.interrupt();
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                // Do nothing.
+            }
+        }
+    }
+    private static LeapController leapController = new LeapController();
+
+    public static LeapController getLeapController() {
+        return leapController;
     }
 }

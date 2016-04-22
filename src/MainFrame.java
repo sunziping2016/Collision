@@ -8,6 +8,7 @@
 import controller.GameController;
 import controller.LeapController;
 import model.GameModel;
+import oracle.jrockit.jfr.JFR;
 import view.*;
 
 import javax.swing.*;
@@ -19,36 +20,18 @@ import java.util.logging.Logger;
 public class MainFrame extends JFrame {
     public MainFrame() {
         super("Collision");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         GameModel gameModel = new GameModel();
         GameController gameController = new GameController(gameModel);
-        ViewManager viewManager = new ViewManager();
-        LeapController leap = new LeapController(gameController, viewManager);
-        viewManager.setLeapController(leap);
-
-        viewManager.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F11"), "F11");
-        viewManager.getActionMap().put("F11", new AbstractAction() {
-            private GraphicsDevice fullscreenDevice = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                MainFrame.this.dispose();
-                if (MainFrame.this.isUndecorated()) {
-                    fullscreenDevice.setFullScreenWindow(null);
-                    MainFrame.this.setUndecorated(false);
-                } else {
-                    MainFrame.this.setUndecorated(true);
-                    fullscreenDevice.setFullScreenWindow(MainFrame.this);
-                }
-                MainFrame.this.setVisible(true);
-                MainFrame.this.repaint();
-            }
-        });
+        ViewManager viewManager = new ViewManager(this);
 
         // add views.
         viewManager.registerView(new GameView(gameController), "game");
         viewManager.registerView(new SplashView(gameController), "splash");
         viewManager.registerView(new LeaderboardView(), "leaderboard");
+        viewManager.registerView(new GameOverView(), "gameover");
+        viewManager.registerView(new GameStartView(), "gamestart");
         viewManager.pushView("splash");
 
         Container lay = getContentPane();
@@ -66,10 +49,16 @@ public class MainFrame extends JFrame {
         setLocation((int) ((dimension.getWidth() - getWidth()) / 2), (int) ((dimension.getHeight() - getHeight()) / 2));
     }
     public static void main(String[] args) {
+        LeapController.getLeapController().start();
         MainFrame app = new MainFrame();
         app.setVisible(true);
-        Prefs.getPrefs().writeOut();
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                LeapController.getLeapController().stop();
+                Leaderboard.getLeaderboard().writePrefs();
+                Prefs.getPrefs().writeOut();
+            }
+        });
     }
-
-    private final static Logger logger = Logger.getLogger(MainFrame.class.getName());
 }

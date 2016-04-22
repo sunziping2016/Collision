@@ -6,7 +6,6 @@ import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Filter;
 
 import java.awt.*;
-import java.sql.Time;
 import java.util.ArrayList;
 
 /**
@@ -15,14 +14,29 @@ import java.util.ArrayList;
  * Game controller class.
  */
 public class GameController implements Runnable {
-    private static final int PAUSE_DELAY = 100;
+    public class GameHandsListener extends HandsListener {
+        @Override
+        public int getnHands() {
+            return getnUsers();
+        }
+
+        @Override
+        public void onHandUpdate(int index, float x, float y, long dt, boolean online) {
+            setUserOnline(index, online);
+            if (online)
+                moveUserBall(index, x, y, dt);
+        }
+    }
     private final GameModel gameModel;
+    private final GameHandsListener gameListener;
     private final ArrayList<GameListener> listeners = new ArrayList<>();
+
     private Thread thread;
     private Timer timer = new Timer();
 
     public GameController(GameModel gameModel) {
         this.gameModel = gameModel;
+        gameListener = new GameHandsListener();
     }
 
     public void start() {
@@ -62,6 +76,9 @@ public class GameController implements Runnable {
             }
             // Update new position
             now = System.currentTimeMillis();
+
+            boolean gameOver = true;
+
             synchronized (gameModel) {
                 //gameModel.world.step((now - time) /1000f, 6, 2);
                 gameModel.world.step(30f /1000f, 6, 2);
@@ -77,7 +94,7 @@ public class GameController implements Runnable {
                             ball.getBody().setGravityScale(1.0f);
                             ball.getBody().setLinearDamping(0.0f);
                         }
-                        System.out.println(i + " dead");
+                        //System.out.println(i + " dead");
                     }
                 }
                 // Update cool time
@@ -86,14 +103,31 @@ public class GameController implements Runnable {
                     if (ball.coolDown > 0)
                         --ball.coolDown;
                 }
+                // Clear the fallen death
+                for (int i = 0; i < gameModel.userBalls.size(); ++i) {
+                    Ball ball = gameModel.userBalls.get(i);
+                    if (ball.getBody().getPosition().y < -1.0f) {
+                        ball.getBody().setGravityScale(0.0f);
+                        ball.isCleared = true;
+                    }
+                }
             }
+
             synchronized (listeners) {
                 for (GameListener i: listeners)
-                    i.onGameUpdate();
+                    new Thread(() -> i.onGameUpdate()).start();
             }
-            // Clear the fallen death
             time = now;
         }
+    }
+    public boolean isGameOver() {
+        // Check for game over
+        synchronized (gameModel) {
+            for (int i = 0; i < gameModel.userBalls.size(); ++i)
+                if (!gameModel.userBalls.get(i).isCleared)
+                    return false;
+        }
+        return true;
     }
 
     public void setnUsers(int n) {
@@ -118,10 +152,12 @@ public class GameController implements Runnable {
     }
 
     public synchronized void moveUserBall(int index, double x, double y, double dt) {
+        Ball ball = gameModel.userBalls.get(index);
+        if (ball.isDead) return;
         final float RATE = 5000f;
         double dx = (16 * (float) x - 8) - gameModel.userBalls.get(index).getBody().getPosition().x;
         double dy = (10 * (float) y) - gameModel.userBalls.get(index).getBody().getPosition().y;
-        gameModel.userBalls.get(index).getBody().applyForceToCenter(new Vec2((float) (dx / dt * RATE), (float) (dy / dt * RATE)));
+        ball.getBody().applyForceToCenter(new Vec2((float) (dx / dt * RATE), (float) (dy / dt * RATE)));
     }
 
     public int getnUsers() {
@@ -150,6 +186,10 @@ public class GameController implements Runnable {
 
     public void addBallRandom() {
         gameModel.addBallRandom();
+    }
+
+    public GameHandsListener getGameListener() {
+        return gameListener;
     }
 
     public Timer getTimer() {

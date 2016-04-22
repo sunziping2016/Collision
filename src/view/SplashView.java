@@ -2,6 +2,7 @@ package view;
 
 import controller.GameController;
 import controller.GameListener;
+import controller.LeapController;
 import model.Ball;
 import model.GameModel;
 import org.jbox2d.common.Vec2;
@@ -36,8 +37,8 @@ public class SplashView extends View implements RadialMenuListener, GameListener
     }
 
     @Override
-    public void onStart() {
-        getViewManager().getLeapController().addListener(menu);
+    public void onStart(Content content) {
+        LeapController.getLeapController().addPointerListener(menu);
         gameController.setBoundary();
         gameController.setnUsers(0);
         gameController.setnBalls(6);
@@ -50,7 +51,7 @@ public class SplashView extends View implements RadialMenuListener, GameListener
     public void onStop() {
         gameController.stop();
         gameController.removeListener(this);
-        getViewManager().getLeapController().removeListener(menu);
+        LeapController.getLeapController().removePointerListener(menu);
     }
 
     @Override
@@ -83,7 +84,7 @@ public class SplashView extends View implements RadialMenuListener, GameListener
                 getViewManager().pushView("leaderboard");
                 break;
             case SPLASH_MENU_EXIT_GAME:
-                System.exit(0);
+                getViewManager().close();
                 break;
             default:
                 break;

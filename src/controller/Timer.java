@@ -39,6 +39,9 @@ public class Timer {
     @Override
     public String toString() {
         long time = getElapse();
-        return String.format("Time: %02d:%02d.%02d", time / 60000, (time / 1000) % 60, (time / 10) % 100);
+        return toString(time);
+    }
+    public static String toString(long time) {
+        return String.format("%02d:%02d.%02d", time / 60000, (time / 1000) % 60, (time / 10) % 100);
     }
 }

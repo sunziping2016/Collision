@@ -50,7 +50,9 @@ public class RadialMenu extends PointerListener {
     }
 
     @Override
-    public void onPointerUpdate(float cx, float cy, boolean online) {
+    public void onPointerUpdate(float x, float y, long t, boolean online) {
+        x *= 16.0f;
+        y = 10.0f - 10.0f * y;
         drawCursor = online;
         if (!online) {
             selectExtent = 0;
@@ -58,8 +60,8 @@ public class RadialMenu extends PointerListener {
             listener.onMenuSelection(-1);
             return;
         }
-        this.cursorX = cx;
-        this.cursorY = cy;
+        this.cursorX = x;
+        this.cursorY = y;
 
         float dx = cursorX - centerX;
         float dy = cursorY - centerY;

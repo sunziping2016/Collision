@@ -35,6 +35,7 @@ public class Colors {
     public static Color mixtue(Color a, Color b, float r) {
         return new Color((int) (a.getRed() * r + b.getRed() * (1.0f - r) + 0.5),
                 (int) (a.getGreen() * r + b.getGreen() * (1.0f - r) + 0.5),
-                (int) (a.getBlue() * r + b.getBlue() * (1.0f - r) + 0.5));
+                (int) (a.getBlue() * r + b.getBlue() * (1.0f - r) + 0.5),
+                (int) (a.getAlpha() < b.getAlpha() ? a.getAlpha() : b.getAlpha()));
    }
 }
