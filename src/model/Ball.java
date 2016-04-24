@@ -30,7 +30,7 @@ public class Ball {
         else {
             bodyDef.type = BodyType.DYNAMIC;
             bodyDef.linearDamping = 10f;
-            coolDown = 30;
+            coolDown = 60;
         }
         bodyDef.position.set(pos);
         bodyDef.gravityScale = 0.0f;

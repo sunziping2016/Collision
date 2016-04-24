@@ -6,7 +6,7 @@ package controller;
  * Hands listener class.
  */
 abstract public class HandsListener {
-    private static final float DEFAULT_HEIGHT = 125f, DEFAULT_WIDTH = 200f, DEFAULT_ABOVE = 250f, DEFAULT_SPACE = 400f;
+    private static final float DEFAULT_HEIGHT = 125f, DEFAULT_WIDTH = 200f, DEFAULT_ABOVE = 150f, DEFAULT_SPACE = 400f;
 
     int[] preferredHandsID = new int[0];
 

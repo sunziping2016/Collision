@@ -74,7 +74,7 @@ public class GameOverView extends View implements RadialMenuListener {
         g2.drawStringCentered("GAME OVER", 2.0f, Colors.PAUSED_TEXT, 8, 3);
         if (time != null)
             g2.drawStringCentered("Time: " + time, 0.5f, Color.WHITE, 8, 5);
-        if (time != null)
+        if (high)
             g2.drawStringCentered("A new high score!", 0.5f, Color.WHITE, 8, 5.6f);
         menu.draw(g2);
     }

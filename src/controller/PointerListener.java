@@ -10,7 +10,7 @@ import java.awt.*;
  * Pointer listener class.
  */
 abstract public class PointerListener {
-    private static final float DEFAULT_HEIGHT = 125f, DEFAULT_WIDTH = 200f, DEFAULT_ABOVE = 250f;
+    private static final float DEFAULT_HEIGHT = 125f, DEFAULT_WIDTH = 200f, DEFAULT_ABOVE = 150f;
 
     int preferredPointableID = -1;
 

@@ -1,6 +1,2 @@
-*.class
-*.jar
-*.dll
-lib/**
 classes/**
 prefs.txt
